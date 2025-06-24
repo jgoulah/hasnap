@@ -1,0 +1,34 @@
+#!/bin/bash
+
+##
+#https://libvirt.org/kbase/live_full_disk_backup.html
+if [ "$(id -u)" -ne 0 ]; then
+    echo 'This script must be run by root' >&2
+    exit 1
+fi
+
+# name of domain, snapshot, and target disk device
+datestamp=$(date +%F)
+thedomain="hassos"
+snapshotname="hassos-snapshot-${datestamp}"
+baseimage=$(virsh domblklist $thedomain | grep vda | awk '{print $2}')
+baseimage_backup="${baseimage%.qcow2}-backup-${datestamp}.qcow2"
+
+# create snapshot in default pool location
+# file name is $thedomain.$snapshotname
+virsh snapshot-create-as $thedomain --name $snapshotname --disk-only
+
+
+cp $baseimage $baseimage_backup
+
+virsh blockcommit vm1 vda --active --verbose --pivot
+
+# rm snapshot 
+# move backup to nfs
+# dump xml to nfs
+
+
+
+
+# list snapshot
+#virsh snapshot-list $thedomain
